@@ -379,7 +379,6 @@
     function playStream(audioElement, path){
         audioElement.volume = 0.02;
         audioElement.src = path;
-        audioElement.load();
         audioElement.play();
         
         if(path == "media/Odysee.mp3") songFile = "Odysee";
