@@ -6,6 +6,8 @@
     // variables
     let NUM_SAMPLES = 256;  
     let audioElement;
+    let sourceElement;
+    let audio = new Audio();
     let analyzerNode;
     let canvas, ctx;
     let data; // data array to store frequency/waveform data
@@ -52,7 +54,8 @@
     
     // MISC. variables
     let centerX, centerY; // save the center X, Y of canvas in variables
-    let songFile, sec, min;
+    let sec, min;
+    let songFile = "";
     
     // bool/state variables
     let showWaveForm, freqBarsEffect, paused; // paused bool checks pause and play state to animate particles
@@ -76,6 +79,7 @@
         
         // get reference to <audio> element on page
         audioElement = document.querySelector('audio');
+        sourceElement = document.querySelector('source');
 
         // get the analyzer node with with helper function
         analyzerNode = createWebAudioContextWithAnalyzerNode(audioElement);
@@ -84,7 +88,7 @@
         setupUI();
         
         // load and play default sound into audio element
-        playStream(audioElement, "media/Senbonzakura.mp3");
+        //playStream(audioElement, sourceElement, "media/Senbonzakura.mp3");
         
         // start animation loop
         update();
@@ -376,10 +380,15 @@
     }
     
     /* Reads the audio path and plays song files */
-    function playStream(audioElement, path){
-        audioElement.volume = 0.02;
-        audioElement.src = path;
-        audioElement.play();
+    function playStream(aE, sE, path){
+        aE.volume = 0.02;
+        sE.src = path;
+        aE.load();
+        aE.play();
+
+        //audioElement.volume = 0.02;
+        //audioElement.src = path;
+        //audioElement.play();
         
         if(path == "media/Odysee.mp3") songFile = "Odysee";
         else if(path == "media/BinarySuns.mp3") songFile = "Binary Suns (Coyote Kisses Remix)";
@@ -459,7 +468,7 @@
     /* Sets up each UI functionality */
     function setupUI(){
         document.querySelector("#trackSelect").onchange = function(e){
-            playStream(audioElement, e.target.value); 
+            playStream(audioElement,sourceElement, e.target.value); 
         };
         
         document.querySelector("#fsbutton").onclick = function(e){
