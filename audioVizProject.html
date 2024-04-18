@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Web Audio Visualizer</title>
+    <link href="https://fonts.googleapis.com/css?family=Maven+Pro" rel="stylesheet">
+    <link href="css/styles.css" rel="stylesheet" type="text/css">
+    <script src="js/script.js"></script>
+</head>
+<body>
+	<canvas id="canvas" width="1024" height="576">
+        Get a real browser! 
+    </canvas>
+    <div id="controls">
+        <header>
+            <h1>AUDIO VISUALIZER</h1>
+        </header>
+        <audio crossorigin="anonymous" type="audio/mp3" controls loop></audio>
+        <br/>
+        <label>Track:
+            <select id="trackSelect">
+                <option value="media/Senbonzakura.mp3">Senbonzakura</option>
+                <option value="media/Odysee.mp3">Odysee</option>
+                <option value="media/NOLA.mp3">NOLA</option>
+                <option value="media/Monody.mp3">Monody (feat. Laura Brehm)</option>
+                <option value="media/BinarySuns.mp3">Binary Suns (Coyote Kisses Remix)</option>
+                <option value="media/FadedRestrung.mp3">Faded Restrung</option>
+                <option value="media/NeverForgetYou.mp3">Never Forget You (Price & Takis Remix)</option>
+                <option value="media/DontLetMeDown.mp3">Don't Let Me Down (Illenium Remix)</option>
+            </select>
+        </label>
+        <br/>
+        <section>
+            <form id="versions">
+                <h4>Versions:</h4>
+                <input type="radio" name="versionCtrl" value="simple" checked>Simple<br>
+                <input type="radio" name="versionCtrl" value="real">The REAL VISUALIZER!<br>
+            </form>
+        </section>
+        <hr>
+        <h4>The Visuals:</h4>
+        <section>
+            <span>
+                <input type="checkbox" id="checkboxHoriz" checked>
+                <label for="checkboxHoriz">Horizon Effect</label> |
+                <input type="checkbox" id="checkboxFreqBar">
+                <label for="checkboxFreqBar">Frequency Bars</label> |
+                <input type="checkbox" id="checkboxWaveform">
+                <label for="checkboxWaveform">Show Waveform</label>  
+            </span>
+        </section>
+        <h4>More Visuals:</h4>
+        <section>
+            <span>
+                <input type="checkbox" id="checkboxGrayscale">
+                <label for="checkboxGrayscale">Grayscale</label> | 
+                <input type="checkbox" id="checkboxThreshold">
+                <label for="checkboxThreshold">Threshold</label> |
+                <input type="checkbox" id="checkboxInvert">
+                <label for="checkboxInvert">Invert</label>
+            </span>
+        </section>
+        <hr>
+        <section>
+            <input type="checkbox" id="checkboxColors">
+            <label for="checkboxColors">Random Colors for Bezier Effect</label>
+            <form id="centEffect">
+                <h4>Center Effects:</h4>
+                <input type="radio" name="centerEffect" value="effect1" checked>Bezier Effect<br>
+                <input type="radio" name="centerEffect" value="effect2">Surrounding Lines<br>
+                <input type="radio" name="centerEffect" value="effect3">Expanding Lines<br>
+            </form>
+        </section>
+        <hr>
+        <section>
+            <label for="sliderBass">Bass Boost:</label>
+            <input id="sliderBass" type="range" min="0" step = "1" max="75" value="0" />
+            <span id="bassResult">0</span>
+        </section>
+        <section>
+            <label for="sliderReverb">Delay/Reverb:</label>
+            <input id="sliderReverb" type="range" min="0.0" step="0.1" max="1.0" value="0.0" />
+            <span id="reverbResult">0</span>
+        </section>
+        <p id="status">???</p>
+      <button id="fsbutton">Go Full Screen</button>
+    </div>
+</body>
+</html>
