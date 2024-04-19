@@ -58,7 +58,7 @@
     // bool/state variables
     let showWaveForm, freqBarsEffect, paused; // paused bool checks pause and play state to animate particles
     let centerEffectState = "effect1", randColors = false, horizEffect = true, versionState = "simple", grayscale = false, threshold = false, invert = false;
-    
+
     /* Initializes all necessary variables and function calls */
     function init(){
         // set up canvas 
@@ -77,6 +77,7 @@
         
         // get reference to <audio> element on page
         audioElement = document.querySelector('audio');
+        audioElement.volume = 0.02;
 
         // get the analyzer node with with helper function
         analyzerNode = createWebAudioContextWithAnalyzerNode(audioElement);
@@ -85,7 +86,7 @@
         setupUI();
         
         // load and play default sound into audio element
-        playStream(audioElement, "media/Senbonzakura.mp3");
+        playStream("media/Senbonzakura.mp3");
         
         // start animation loop
         update();
@@ -150,6 +151,164 @@
         biquadNode.gain.value = biquadAmount; // change the value of the biquad audio node after it's been created
     }
     
+    // Helper Functions: Setting Up Functionality
+    /* Creates the audioCtx, sourceNode and delayNode */
+    function createWebAudioContextWithAnalyzerNode(audioElement){
+        let audioCtx, analyzerNode, sourceNode;
+        
+        // create new AudioContext
+        audioCtx = new (window.AudioContext || window.webkitAudioContext);
+        
+        // create an analyzer node
+        analyzerNode = audioCtx.createAnalyser();
+        
+        // fft stands for Fast Fourier Transform
+        analyzerNode.fftSize = NUM_SAMPLES;
+        
+        // create delayNode instance
+        delayNode = audioCtx.createDelay();
+        delayNode.delayTime.value = delayAmount;
+        
+        // create biquadNode instance
+        biquadNode = audioCtx.createBiquadFilter();
+        biquadNode.type = "lowshelf";
+        biquadNode.frequency.value = 75;
+        biquadNode.gain.value = biquadAmount;
+        
+        // hook up <audio> element to the analyzerNode
+        sourceNode = audioCtx.createMediaElementSource(audioElement);
+        
+        // connect source node directly to speakers so we can hear the ulaltered source in this channel
+        sourceNode.connect(audioCtx.destination);
+        
+        // this channel will play and visualize the delay
+        sourceNode.connect(delayNode);
+        delayNode.connect(analyzerNode);
+        sourceNode.connect(biquadNode);
+        biquadNode.connect(analyzerNode);
+        
+        // Explanation: the destination (speakers) will play both channels simultaneously if we didn't connect both channels to the destination, we wouldn't be able to hear the delay effect
+        
+        // connect to the destination (speakers)
+        analyzerNode.connect(audioCtx.destination);
+        return analyzerNode;
+    }
+    
+    /* Reads the audio path and plays song files */
+    function playStream(path){
+        audioElement.src = path;
+        audioElement.play();
+        
+        if(path == "media/Odysee.mp3") songFile = "Odysee";
+        else if(path == "media/BinarySuns.mp3") songFile = "Binary Suns (Coyote Kisses Remix)";
+        else if(path == "media/DontLetMeDown.mp3") songFile = "Don't Let Me Down (Illenium Remix)";
+        else if(path == "media/FadedRestrung.mp3") songFile = "Faded (Restrung)";
+        else if(path == "media/Monody.mp3") songFile = "Monody (ft. Laura Brehm)";
+        else if(path == "media/NeverForgetYou.mp3") songFile = "Never Forget You (Price & Takis Remix)";
+        else if(path == "media/NOLA.mp3") songFile = "NOLA";
+        else if(path == "media/Senbonzakura.mp3") songFile = "Senbonzakura";
+        document.querySelector("#status").innerHTML = "Now playing: " + songFile;
+    }
+    
+    /* Gets image data from canvas, manipulates pixels, and displays the image data back onto the canvas
+       Reference: https://www.html5rocks.com/en/tutorials/canvas/imagefilters/ */
+    function manipulatePixels(){
+        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        
+        let data = imageData.data;
+        let red, green, blue, result;
+        
+        // data[i] is red value
+        // data[i+1] is green value
+        // data[i+2] is blue value
+        // data[i+3] is alpha value
+        for(let i = 0; i < data.length; i+= 4){
+            if(grayscale){
+                red = data[i], green = data[i+1], blue = data[i+2];
+                result = 0.1*red + 0.7*green + 0.2*blue;
+                data[i] = data[i+1] = data[i+2] = result;
+            }
+            if(threshold){
+                red = data[i], green = data[i+1], blue = data[i+2];
+                result = (0.1*red + 0.7*green + 0.2*blue >= 128) ? 255 : 0;
+                data[i] = data[i+1] = data[i+2] = result;
+            }
+            if(invert){
+                red = data[i], green = data[i+1], blue = data[i+2];
+                data[i] = 255 - red; // set red value
+                data[i+1] = 255 - green; // set green value
+                data[i+2] = 255 - blue; // set blue value
+            }
+        }
+        ctx.putImageData(imageData, 0, 0);
+    }
+    
+    /* Sets up each UI functionality */
+    function setupUI(){
+        document.querySelector("#trackSelect").onchange = function(e){
+            playStream(e.target.value); 
+        };
+        
+        document.querySelector("#fsbutton").onclick = function(e){
+            requestFullscreen(canvas);  
+        };
+        
+        document.getElementById('centEffect').onchange = function(e){
+            centerEffectState = e.target.value; 
+        };
+        
+        document.getElementById("checkboxColors").onchange = function(e){
+            randColors = e.target.checked;
+        };
+        
+        document.getElementById("checkboxFreqBar").onchange = function(e){
+            freqBarsEffect = e.target.checked;
+        };
+        
+        document.querySelector("#checkboxHoriz").onchange = function(e){
+            horizEffect = e.target.checked;
+        };
+        
+        document.querySelector("#checkboxWaveform").onchange = function(e){
+            showWaveForm = e.target.checked;
+        };
+        
+        document.getElementById('versions').onchange = function(e){
+            versionState = e.target.value;
+        };
+        
+        document.getElementById('sliderReverb').onchange = function(e){
+            delayAmount = e.target.value;
+            document.getElementById('reverbResult').innerHTML = e.target.value;
+        };
+        
+        document.getElementById('sliderBass').onchange = function(e){
+            biquadAmount = e.target.value;
+            document.getElementById('bassResult').innerHTML = e.target.value;
+        };
+        
+        document.getElementById('checkboxGrayscale').onchange = function(e){
+            grayscale = e.target.checked;    
+        };
+        
+        document.getElementById('checkboxThreshold').onchange = function(e){
+            threshold = e.target.checked;
+        };
+        
+        document.getElementById('checkboxInvert').onchange = function(e){
+            invert = e.target.checked;  
+        };
+        
+        // play and pauses the particle effect
+        audioElement.onplay = function(){
+            paused = false;
+        };
+        
+        audioElement.onpause = function(){
+            paused = true;
+        };
+    }
+
     // Helper Functions: Drawing Shapes
     /* Draws audio bars in "simple" version of the visualizer */
     function drawBarsSIMPLE(i, barSpacing, barHeightDivider){
@@ -331,100 +490,7 @@
         ctx.lineWidth = 3;
         ctx.stroke();
     }
-    
-    // Helper Functions: Setting Up Functionality
-    /* Creates the audioCtx, sourceNode and delayNode */
-    function createWebAudioContextWithAnalyzerNode(audioElement){
-        let audioCtx, analyzerNode, sourceNode;
-        
-        // create new AudioContext
-        audioCtx = new (window.AudioContext || window.webkitAudioContext);
-        
-        // create an analyzer node
-        analyzerNode = audioCtx.createAnalyser();
-        
-        // fft stands for Fast Fourier Transform
-        analyzerNode.fftSize = NUM_SAMPLES;
-        
-        // create delayNode instance
-        delayNode = audioCtx.createDelay();
-        delayNode.delayTime.value = delayAmount;
-        
-        // create biquadNode instance
-        biquadNode = audioCtx.createBiquadFilter();
-        biquadNode.type = "lowshelf";
-        biquadNode.frequency.value = 75;
-        biquadNode.gain.value = biquadAmount;
-        
-        // hook up <audio> element to the analyzerNode
-        sourceNode = audioCtx.createMediaElementSource(audioElement);
-        
-        // connect source node directly to speakers so we can hear the ulaltered source in this channel
-        sourceNode.connect(audioCtx.destination);
-        
-        // this channel will play and visualize the delay
-        sourceNode.connect(delayNode);
-        delayNode.connect(analyzerNode);
-        sourceNode.connect(biquadNode);
-        biquadNode.connect(analyzerNode);
-        
-        // Explanation: the destination (speakers) will play both channels simultaneously if we didn't connect both channels to the destination, we wouldn't be able to hear the delay effect
-        
-        // connect to the destination (speakers)
-        analyzerNode.connect(audioCtx.destination);
-        return analyzerNode;
-    }
-    
-    /* Reads the audio path and plays song files */
-    function playStream(aE, path){
-        aE.src = path;
-        aE.volume = 0.02;
-        aE.play();
-        
-        if(path == "media/Odysee.mp3") songFile = "Odysee";
-        else if(path == "media/BinarySuns.mp3") songFile = "Binary Suns (Coyote Kisses Remix)";
-        else if(path == "media/DontLetMeDown.mp3") songFile = "Don't Let Me Down (Illenium Remix)";
-        else if(path == "media/FadedRestrung.mp3") songFile = "Faded (Restrung)";
-        else if(path == "media/Monody.mp3") songFile = "Monody (ft. Laura Brehm)";
-        else if(path == "media/NeverForgetYou.mp3") songFile = "Never Forget You (Price & Takis Remix)";
-        else if(path == "media/NOLA.mp3") songFile = "NOLA";
-        else if(path == "media/Senbonzakura.mp3") songFile = "Senbonzakura";
-        document.querySelector("#status").innerHTML = "Now playing: " + songFile;
-    }
-    
-    /* Gets image data from canvas, manipulates pixels, and displays the image data back onto the canvas
-       Reference: https://www.html5rocks.com/en/tutorials/canvas/imagefilters/ */
-    function manipulatePixels(){
-        let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-        
-        let data = imageData.data;
-        let red, green, blue, result;
-        
-        // data[i] is red value
-        // data[i+1] is green value
-        // data[i+2] is blue value
-        // data[i+3] is alpha value
-        for(let i = 0; i < data.length; i+= 4){
-            if(grayscale){
-                red = data[i], green = data[i+1], blue = data[i+2];
-                result = 0.1*red + 0.7*green + 0.2*blue;
-                data[i] = data[i+1] = data[i+2] = result;
-            }
-            if(threshold){
-                red = data[i], green = data[i+1], blue = data[i+2];
-                result = (0.1*red + 0.7*green + 0.2*blue >= 128) ? 255 : 0;
-                data[i] = data[i+1] = data[i+2] = result;
-            }
-            if(invert){
-                red = data[i], green = data[i+1], blue = data[i+2];
-                data[i] = 255 - red; // set red value
-                data[i+1] = 255 - green; // set green value
-                data[i+2] = 255 - blue; // set blue value
-            }
-        }
-        ctx.putImageData(imageData, 0, 0);
-    }
-    
+
     /* Displays currently playing song and song duration */
     function displaySongInfo(){
         // display Song Name
@@ -454,72 +520,6 @@
         if(sec < 10) ctx.fillText("0" + min + ":0" + sec, 10, canvas.height * .835);
         else ctx.fillText("0" + min + ":" + sec, 10, canvas.height * .835);
         ctx.restore();
-    }
-    
-    /* Sets up each UI functionality */
-    function setupUI(){
-        document.querySelector("#trackSelect").onchange = function(e){
-            playStream(audioElement, e.target.value); 
-        };
-        
-        document.querySelector("#fsbutton").onclick = function(e){
-            requestFullscreen(canvas);  
-        };
-        
-        document.getElementById('centEffect').onchange = function(e){
-            centerEffectState = e.target.value; 
-        };
-        
-        document.getElementById("checkboxColors").onchange = function(e){
-            randColors = e.target.checked;
-        };
-        
-        document.getElementById("checkboxFreqBar").onchange = function(e){
-            freqBarsEffect = e.target.checked;
-        };
-        
-        document.querySelector("#checkboxHoriz").onchange = function(e){
-            horizEffect = e.target.checked;
-        };
-        
-        document.querySelector("#checkboxWaveform").onchange = function(e){
-            showWaveForm = e.target.checked;
-        };
-        
-        document.getElementById('versions').onchange = function(e){
-            versionState = e.target.value;
-        };
-        
-        document.getElementById('sliderReverb').onchange = function(e){
-            delayAmount = e.target.value;
-            document.getElementById('reverbResult').innerHTML = e.target.value;
-        };
-        
-        document.getElementById('sliderBass').onchange = function(e){
-            biquadAmount = e.target.value;
-            document.getElementById('bassResult').innerHTML = e.target.value;
-        };
-        
-        document.getElementById('checkboxGrayscale').onchange = function(e){
-            grayscale = e.target.checked;    
-        };
-        
-        document.getElementById('checkboxThreshold').onchange = function(e){
-            threshold = e.target.checked;
-        };
-        
-        document.getElementById('checkboxInvert').onchange = function(e){
-            invert = e.target.checked;  
-        };
-        
-        // play and pauses the particle effect
-        audioElement.onplay = function(){
-            paused = false;
-        };
-        
-        audioElement.onpause = function(){
-            paused = true;
-        };
     }
     
     /* Allows the user to view in fullscreen */
@@ -563,5 +563,11 @@
         return color;
     }
     
-    window.onload = init; // or window.addEventListener("load",init);
+    window.addEventListener("load", () => {
+        let startBtn = document.getElementById('startBtn');
+        startBtn.addEventListener('click', () => {
+            init();
+            startBtn.disabled = true;
+        });
+    });
 })();

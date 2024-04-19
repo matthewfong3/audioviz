@@ -6,6 +6,12 @@ body{
     height: 100%;
 }
 
+#startBtn{
+    display: block;
+    margin: 10px auto;
+    
+}
+
 canvas{
     box-shadow: 5px 5px 10px #222;
     display: block;
