@@ -377,6 +377,7 @@
     
     /* Reads the audio path and plays song files */
     function playStream(aE, path){
+        aE.src = path;
         aE.volume = 0.02;
         aE.play();
         
