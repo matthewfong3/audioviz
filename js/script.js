@@ -6,8 +6,6 @@
     // variables
     let NUM_SAMPLES = 256;  
     let audioElement;
-    let sourceElement;
-    let audio = new Audio();
     let analyzerNode;
     let canvas, ctx;
     let data; // data array to store frequency/waveform data
@@ -79,7 +77,6 @@
         
         // get reference to <audio> element on page
         audioElement = document.querySelector('audio');
-        sourceElement = document.querySelector('source');
 
         // get the analyzer node with with helper function
         analyzerNode = createWebAudioContextWithAnalyzerNode(audioElement);
@@ -88,7 +85,7 @@
         setupUI();
         
         // load and play default sound into audio element
-        //playStream(audioElement, sourceElement, "media/Senbonzakura.mp3");
+        playStream(audioElement, "media/Senbonzakura.mp3");
         
         // start animation loop
         update();
@@ -115,7 +112,6 @@
         }
         else if(versionState == "simple") {
             imageBgd.src = "images/wallpaper.png";
-
             //ctx.fillStyle = 'black';
             //ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
@@ -149,7 +145,7 @@
         
         frameCount++;
         displaySongInfo(); // display currently playing song in canvas
-        //manipulatePixels(); // manipulate pixels according to selected effects
+        manipulatePixels(); // manipulate pixels according to selected effects
         delayNode.delayTime.value = delayAmount; // change the value of the delay audio node after it's been created
         biquadNode.gain.value = biquadAmount; // change the value of the biquad audio node after it's been created
     }
@@ -380,15 +376,9 @@
     }
     
     /* Reads the audio path and plays song files */
-    function playStream(aE, sE, path){
+    function playStream(aE, path){
         aE.volume = 0.02;
-        sE.src = path;
-        aE.load();
         aE.play();
-
-        //audioElement.volume = 0.02;
-        //audioElement.src = path;
-        //audioElement.play();
         
         if(path == "media/Odysee.mp3") songFile = "Odysee";
         else if(path == "media/BinarySuns.mp3") songFile = "Binary Suns (Coyote Kisses Remix)";
@@ -468,7 +458,7 @@
     /* Sets up each UI functionality */
     function setupUI(){
         document.querySelector("#trackSelect").onchange = function(e){
-            playStream(audioElement,sourceElement, e.target.value); 
+            playStream(audioElement, e.target.value); 
         };
         
         document.querySelector("#fsbutton").onclick = function(e){
