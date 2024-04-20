@@ -3,7 +3,7 @@
 (() => {
     "use strict"; // don't forget 'use strict'
     
-    // variables
+    // CLOSURE VARIABLES - NOT GLOBALS
     let NUM_SAMPLES = 256;  
     let audioElement;
     let analyzerNode;
@@ -17,7 +17,7 @@
     let biquadNode;
     
     let particles, numParticles; // variables to create particles
-    // Particle Object
+    // Particle Object - function constructor
     // Particle System Tutorial: http://www.howtosolutions.net/2016/09/javascript-canvas-simple-particle-system/
     let Particle = function(){
         this.x = Math.random() * ((centerX + 40) - (centerX - 40)) + (centerX - 40);
@@ -46,8 +46,8 @@
     };
     
     // CONSTANTS for drawing shapes
-    let barSpacing = 4;
-    let barHeightDivider = 5;
+    let barSpacing = 5;
+    let barHeightDivider = 3;
     let frameCount = 0;
     
     // MISC. variables
@@ -117,7 +117,7 @@
             //ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
         ctx.drawImage(imageBgd, 0, 0);
-        
+
         for(let i = 0; i < data.length; i++){
             if(versionState == "real"){
                 // draw 'horizon' in center
@@ -213,11 +213,13 @@
     /* Gets image data from canvas, manipulates pixels, and displays the image data back onto the canvas
        Reference: https://www.html5rocks.com/en/tutorials/canvas/imagefilters/ */
     function manipulatePixels(){
+        // gets all rgba pixel data of the canvas
         let imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
         
-        let data = imageData.data;
+        let data = imageData.data; // imageData.data is an 8-bit typed array - values range (0-255)
         let red, green, blue, result;
         
+        // imageData.data contains 4 values per pixel - thus, we step by 4 in our loop in order to manipulate 1 pixel per iteration
         // data[i] is red value
         // data[i+1] is green value
         // data[i+2] is blue value
@@ -240,7 +242,8 @@
                 data[i+2] = 255 - blue; // set blue value
             }
         }
-        ctx.putImageData(imageData, 0, 0);
+
+        ctx.putImageData(imageData, 0, 0); // put the altered imageData back onto the canvas
     }
     
     /* Sets up each UI functionality */
@@ -359,8 +362,8 @@
         let rectWidth = 3;
         let offsetY = 10;
         ctx.fillStyle = makeGradient();
-        ctx.fillRect(i * (barSpacing), canvas.height, rectWidth, -(data[i]/barHeightDivider) - offsetY);
-        ctx.fillRect(canvas.width - (i * (barSpacing)), canvas.height, rectWidth, -(data[i]/barHeightDivider) - offsetY);
+        ctx.fillRect((i * (barSpacing)) + canvas.width/2, canvas.height, rectWidth, -(data[i]/barHeightDivider) - offsetY);
+        ctx.fillRect((canvas.width - (i * (barSpacing))) - canvas.width/2, canvas.height, rectWidth, -(data[i]/barHeightDivider) - offsetY);
     }
     
     /* Draws horizon effect in middle of screen */
@@ -385,7 +388,7 @@
     
     /* Draws bezier curves, green expanding lines, or expanding "spikes" from image icon */
     function drawCenterEffect(i, CEstate){
-        let x, y, x2, y2, x3, y3, r, angTheta;
+        let x, y, x2, y2, x3, y3, r, angTheta, threshold;
         ctx.lineWidth = 2;
         if(CEstate == "effect1"){ // bezier effect
             let ctrlX, ctrlY;
@@ -398,18 +401,18 @@
             for(let j = 0; j < 4; j++){
                 if(j == 0){
                     ctrlX = centerX - 30 * freqData;
-                    ctrlY = centerY - 20 * freqData;
+                    ctrlY = centerY - 25 * freqData;
                 }
                 if(j == 1){
                     ctrlX = centerX + 30 * freqData;
-                    ctrlY = centerY - 20 * freqData;
+                    ctrlY = centerY - 25 * freqData;
                 }
                 if(j == 2){
-                    ctrlX = centerX - 25 * freqData;
+                    ctrlX = centerX - 30 * freqData;
                     ctrlY = centerY + 20 * freqData;
                 }
                 if(j == 3){
-                    ctrlX = centerX + 25 * freqData;
+                    ctrlX = centerX + 30 * freqData;
                     ctrlY = centerY + 20 * freqData;
                 }
                 ctx.moveTo(centerX, centerY - 50);
@@ -418,35 +421,25 @@
             ctx.fill();
         }
         else if(CEstate == "effect2"){ // surrounding lines effect
-            r = 72;
-            angTheta = (5 * Math.PI * i / (3 * data.length)) + 2/3 * Math.PI; 
-            ctx.strokeStyle = 'green'; 
+            r = 50;
+            angTheta = (5 * Math.PI * i / (3 * data.length)) + Math.PI/2; 
+            threshold = 7;
+
+            ctx.strokeStyle = 'white'; 
             ctx.beginPath();
-            for(let j = 0; j < 4; j++)
+            for(let j = 0; j < 2; j++)
             {
                 if(j == 0){
                     x = centerX + r * Math.cos(angTheta);
                     y = centerY - r * Math.sin(angTheta);
-                    x2  =  centerX + (r + data[i]/15) * Math.cos(angTheta);
-                    y2  =  centerY - (r + data[i]/15) * Math.sin(angTheta);
+                    x2  =  centerX + (r + data[i]/threshold) * Math.cos(angTheta);
+                    y2  =  centerY - (r + data[i]/threshold) * Math.sin(angTheta);
                 }
-                if(j == 1){
-                    x = centerX + r * Math.cos(angTheta);
-                    y = centerY - r * Math.sin(angTheta);
-                    x2  =  centerX + (r - data[i]/15) * Math.cos(angTheta);
-                    y2  =  centerY - (r - data[i]/15) * Math.sin(angTheta); 
-                }
-                if(j == 2){
+                else if(j == 1){
                     x = centerX - r * Math.cos(angTheta);
                     y = centerY - r * Math.sin(angTheta);
-                    x2  =  centerX - (r + data[i]/15) * Math.cos(angTheta);
-                    y2  =  centerY - (r + data[i]/15) * Math.sin(angTheta); 
-                }
-                if(j == 3){
-                    x = centerX - r * Math.cos(angTheta);
-                    y = centerY - r * Math.sin(angTheta);
-                    x2  =  centerX - (r - data[i]/15) * Math.cos(angTheta);
-                    y2  =  centerY - (r - data[i]/15) * Math.sin(angTheta);  
+                    x2  =  centerX - (r + data[i]/threshold) * Math.cos(angTheta);
+                    y2  =  centerY - (r + data[i]/threshold) * Math.sin(angTheta); 
                 }
                 ctx.moveTo(x, y);
                 ctx.lineTo(x2, y2);
@@ -454,22 +447,24 @@
             ctx.stroke();
         }
         else if(CEstate == "effect3"){ // expanding lines effect
-            r = 50;
-            angTheta = (13/9 * Math.PI * i/ data.length) + Math.PI/3;
-            ctx.strokeStyle = "black";
+            r = 30;
+            angTheta = (14/9 * Math.PI * i/ data.length) + Math.PI;
+            threshold = 4;
+
+            ctx.strokeStyle = 'black';
             ctx.beginPath();
             for(let j = 0; j < 2; j++){
                 if(j == 0){
                     x = centerX + r * Math.cos(angTheta);
                     y = centerY - r * Math.sin(angTheta);
-                    x2 = centerX + (r + data[i]/10) * Math.cos(angTheta);
-                    y2 = centerY - (r + data[i]/10) * Math.sin(angTheta); 
+                    x2 = centerX + (r + data[i]/threshold) * Math.cos(angTheta);
+                    y2 = centerY - (r + data[i]/threshold) * Math.sin(angTheta); 
                 }
                 if(j == 1){
                     x = centerX - r * Math.cos(angTheta);
                     y = centerY + r * Math.sin(angTheta);
-                    x2 = centerX - (r + data[i]/10) * Math.cos(angTheta);
-                    y2 = centerY + (r + data[i]/10) * Math.sin(angTheta);
+                    x2 = centerX - (r + data[i]/threshold) * Math.cos(angTheta);
+                    y2 = centerY + (r + data[i]/threshold) * Math.sin(angTheta);
                 }
                 ctx.moveTo(x, y);
                 ctx.lineTo(x2, y2);
@@ -562,6 +557,14 @@
         let color='rgba('+red+','+green+','+blue+','+a+')';
         return color;
     }
+
+    // Get a random integer between min (inclusive) and max (inclusive)
+    // ref: https://stackoverflow.com/questions/1527803/generating-random-whole-numbers-in-javascript-in-a-specific-range
+    function getRandomInt(min, max){
+        min = Math.ceil(min);
+        max = Math.floor(max);
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }; 
     
     window.addEventListener("load", () => {
         let startBtn = document.getElementById('startBtn');
